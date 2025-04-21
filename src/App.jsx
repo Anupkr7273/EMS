@@ -8,37 +8,44 @@ import { AuthContext } from './context/AuthProvider'
 
 export default function App() {
 
-  const [user, setuser] = useState(null)
+  const [user, setUser] = useState(null)
+  const [loggedInUserData, setloggedInUserData] = useState(null)
   const authData = useContext(AuthContext)
 
   useEffect(() => {
-    if(authData){
       const loggedInUser=localStorage.getItem("loggedInUser")
       if(loggedInUser){
-        setuser(loggedInUser.role)
+          const userData=JSON.parse(loggedInUser)
+        setUser(userData.role)
+        setloggedInUserData(userData.data) 
       }
-    }
-  }, [authData])
+  },[])  
+
   
 
-  const handleLogin=(email,password)=>{
-    if(email== 'admin@example.com' && password=='123'){
-      setuser('admin')
-      localStorage.setItem('loggedInUser',JSON.stringify({role:'admin'}))
-    }else if(authData && authData.employees.employees.find((e) => email == e.email && e.password == password)){
-      setuser('employee')    
-      localStorage.setItem('loggedInUser',JSON.stringify({role:'employee'}))
-    }
-    else{
-      alert('Invalid credentials')
-    }
-    
-  }
+  const handleLogin = (email, password) => {
+    if (email === 'admin@example.com' && password === '123') {
+      setUser('admin');
+      localStorage.setItem('loggedInUser', JSON.stringify({ role: 'admin' }));
+    } else if (authData && authData.employees) {
+      const employee = authData.employees.find(
+        (e) => email === e.email && e.password === password
+      );
+      if (employee) {
+        setUser('employee');
+        setloggedInUserData(employee);
+        localStorage.setItem('loggedInUser', JSON.stringify({ role: 'employee',data:employee }));
+      }
+     } else {
+        alert('Invalid credentials');
+      }
+    } 
+  
     
   return (
     <>
     {!user ? <Login handleLogin={handleLogin}/>: ''}
-    {user=='admin'? <AdminDashboard/>: <EmployeeDashboard/>}
+    {user=='admin'? <AdminDashboard/>:(user=='employee'? <EmployeeDashboard data={loggedInUserData}/>:null)}
     </>
   )
 }
